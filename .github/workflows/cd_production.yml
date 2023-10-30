@@ -1,0 +1,32 @@
+name: CD - Production
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  codebuild:
+    runs-on: ubuntu-latest
+    environment: Production
+    steps:
+      - name: echo
+        run: echo 'Deploying to ${{ vars.ENV }}'
+
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNTID }}:role/GitHubTriggerRole
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Run CodeBuild
+        uses: aws-actions/aws-codebuild-run-build@v1
+        with:
+          project-name: CD-CodeBuild-${{ secrets.AWS_REGION }}
